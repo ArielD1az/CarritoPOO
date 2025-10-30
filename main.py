@@ -65,7 +65,7 @@ def vaciar_carrito():
 ventana = tk.Tk()
 ventana.title("Carrito de Compras")
 ventana.iconbitmap("icon.ico")
-ventana.geometry("800x600")
+ventana.geometry("800x600")##Configuracion general de la ventana
 ventana.resizable(False, False)
 ventana.config(bg="#f5f5f5")
 
@@ -76,7 +76,7 @@ frame_deposito.pack(fill="x", padx=20, pady=10)
 tabla_deposito = ttk.Treeview(frame_deposito, columns=("nombre", "precio", "stock"), show="headings", height=5)
 tabla_deposito.heading("nombre", text="Nombre")
 tabla_deposito.heading("precio", text="Precio")
-tabla_deposito.heading("stock", text="Stock")
+tabla_deposito.heading("stock", text="Stock")##Definicion de los labels y las partes de nombre precio y stock
 tabla_deposito.pack(fill="x")
 
 
@@ -86,7 +86,7 @@ frame_agregar.pack(fill="x", padx=20, pady=10)
 tk.Label(frame_agregar, text="Producto:", bg="#f5f5f5").grid(row=0, column=0, padx=5, pady=5)
 
 
-combo_productos = ttk.Combobox(frame_agregar, values=[p.nombre for p in deposito], state="readonly", width=23)
+combo_productos = ttk.Combobox(frame_agregar, values=[p.nombre for p in deposito], state="readonly", width=23)##aca se usa combobox que hace que en vez de inputs se use un selector
 combo_productos.set("Seleccioná un producto")
 combo_productos.grid(row=0, column=1, padx=5, pady=5)
 
