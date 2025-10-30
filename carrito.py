@@ -1,4 +1,4 @@
-class Producto:
+class Producto:##Definicion de la clase producto con su constructor y sus metodos
     def __init__(self, nombre, precio, stock):
         self.nombre = nombre
         self.precio = precio
@@ -14,7 +14,7 @@ class Producto:
         self.stock += cantidad
 
 
-class Carrito:
+class Carrito:##Clase carrito que tiene su constructor y metodos propios
     def __init__(self):
         self.productos = [] 
         self.total = 0
@@ -52,7 +52,7 @@ class Carrito:
         self.total = 0
 
     def mostrarProducto(self, posicion):
-        if 0 <= posicion < len(self.productos):
+        if 0 <= posicion < len(self.productos):#Esto hace el recorrido para retornarlo y lo que seria el frontend se encarga
             prod, cantidad = self.productos[posicion]
             subtotal = cantidad * prod.precio
             return [prod.nombre, prod.precio, cantidad, subtotal]
@@ -60,7 +60,7 @@ class Carrito:
             return "Producto no existente"
 
 
-def buscar(nombre, deposito):
+def buscar(nombre, deposito):##Esto se cambio para ajustar al combox del tkinter
     for producto in deposito:
         if producto.nombre.lower() == nombre.lower():
             return producto
@@ -73,6 +73,6 @@ deposito = [
     Producto("Banana", 150, 5),
     Producto("Naranja", 180, 8),
     Producto("Pera", 220, 6),
-]
+]##Productos para usar en la app y definicion del objeto
 
-carrito = Carrito()
+carrito = Carrito()##Definicion del objeto carrito
