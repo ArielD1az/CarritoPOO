@@ -1,80 +1,128 @@
-class Producto:
-    def __init__(self, nombre, precio, stock):
-        self.nombre = nombre
-        self.precio = precio
-        self.stock = stock
-
-    def reducirStock(self, cantidad):
-        if cantidad <= self.stock:
-            self.stock -= cantidad
-        else:
-            print(f"No hay suficiente stock de {self.nombre} (disponible: {self.stock})")
-
-    def aumentarStock(self, cantidad):
-        self.stock += cantidad
+import tkinter as tk
+from tkinter import ttk, messagebox
+from carrito import deposito, carrito, buscar
 
 
-class Carrito:
-    def __init__(self):
-        self.productos = []  # [[Producto, cantidad], ...]
-        self.total = 0
+def actualizar_tabla_deposito():
+    tabla_deposito.delete(*tabla_deposito.get_children())
+    for prod in deposito:
+        tabla_deposito.insert("", "end", values=(prod.nombre, prod.precio, prod.stock))
 
-    def agregarProducto(self, producto, cantidad):
-        if producto.stock >= cantidad:
-            producto.reducirStock(cantidad)
+def actualizar_tabla_carrito():
+    tabla_carrito.delete(*tabla_carrito.get_children())
+    for i, item in enumerate(carrito.productos):
+        datos = carrito.mostrarProducto(i)
+        tabla_carrito.insert("", "end", values=(datos[0], datos[1], datos[2], datos[3]))
+    label_total.config(text=f"Total: ${carrito.total:.2f}")
 
-            # Buscar si ya está en el carrito
-            for item in self.productos:
-                if item[0].nombre == producto.nombre:
-                    item[1] += cantidad
-                    break
-            else:
-                self.productos.append([producto, cantidad])
+def agregar_producto():
+    nombre = combo_productos.get().strip()
+    cantidad_txt = entrada_cantidad.get().strip()
 
-            self.total += producto.precio * cantidad
-            return True
-        else:
-            return False  # stock insuficiente
+    if not nombre or not cantidad_txt.isdigit():
+        messagebox.showwarning("Error", "Seleccione un producto y una cantidad válida")
+        return
 
-    def eliminarProducto(self, producto):
-        for item in self.productos:
-            if item[0].nombre == producto.nombre:
-                prod, cantidad = item
-                prod.aumentarStock(cantidad)
-                self.total -= prod.precio * cantidad
-                self.productos.remove(item)
-                return True
-        return False
+    cantidad = int(cantidad_txt)
+    prod = buscar(nombre, deposito)
 
-    def vaciarCarrito(self):
-        for prod, cantidad in self.productos:
-            prod.aumentarStock(cantidad)
-        self.productos.clear()
-        self.total = 0
+    if not prod:
+        messagebox.showerror("Error", "Producto inexistente")
+        return
 
-    def mostrarProducto(self, posicion):
-        if 0 <= posicion < len(self.productos):
-            prod, cantidad = self.productos[posicion]
-            subtotal = cantidad * prod.precio
-            return [prod.nombre, prod.precio, cantidad, subtotal]
-        else:
-            return "Producto no existente"
+    if carrito.agregarProducto(prod, cantidad):
+        actualizar_tabla_deposito()
+        actualizar_tabla_carrito()
+        combo_productos.set("Seleccioná un producto")
+        entrada_cantidad.delete(0, tk.END)
+    else:
+        messagebox.showerror("Stock insuficiente", f"Solo hay {prod.stock} unidades disponibles.")
+
+def eliminar_producto():
+    seleccionado = tabla_carrito.focus()
+    if not seleccionado:
+        messagebox.showwarning("Error", "Seleccione un producto del carrito para eliminar")
+        return
+
+    valores = tabla_carrito.item(seleccionado, "values")
+    nombre = valores[0]
+    prod = buscar(nombre, deposito)
+
+    if carrito.eliminarProducto(prod):
+        actualizar_tabla_carrito()
+        actualizar_tabla_deposito()
+    else:
+        messagebox.showinfo("Info", "El producto no está en el carrito")
+
+def vaciar_carrito():
+    if messagebox.askyesno("Confirmar", "¿Seguro que desea vaciar el carrito?"):
+        carrito.vaciarCarrito()
+        actualizar_tabla_carrito()
+        actualizar_tabla_deposito()
 
 
-def buscar(nombre, deposito):
-    for producto in deposito:
-        if producto.nombre.lower() == nombre.lower():
-            return producto
-    return False
+
+ventana = tk.Tk()
+ventana.title("Carrito de Compras")
+ventana.iconbitmap("icon.ico")
+ventana.geometry("800x600")
+ventana.resizable(False, False)
+ventana.config(bg="#f5f5f5")
 
 
-# ----- Productos de ejemplo -----
-deposito = [
-    Producto("Manzana", 200, 10),
-    Producto("Banana", 150, 5),
-    Producto("Naranja", 180, 8),
-    Producto("Pera", 220, 6),
-    Producto("Zapatilla",1000,2)
-]
+frame_deposito = tk.LabelFrame(ventana, text="Productos disponibles", padx=10, pady=10, bg="#f5f5f5")
+frame_deposito.pack(fill="x", padx=20, pady=10)
 
-carrito = Carrito()
+tabla_deposito = ttk.Treeview(frame_deposito, columns=("nombre", "precio", "stock"), show="headings", height=5)
+tabla_deposito.heading("nombre", text="Nombre")
+tabla_deposito.heading("precio", text="Precio")
+tabla_deposito.heading("stock", text="Stock")
+tabla_deposito.pack(fill="x")
+
+
+frame_agregar = tk.LabelFrame(ventana, text="Agregar producto al carrito", padx=10, pady=10, bg="#f5f5f5")
+frame_agregar.pack(fill="x", padx=20, pady=10)
+
+tk.Label(frame_agregar, text="Producto:", bg="#f5f5f5").grid(row=0, column=0, padx=5, pady=5)
+
+
+combo_productos = ttk.Combobox(frame_agregar, values=[p.nombre for p in deposito], state="readonly", width=23)
+combo_productos.set("Seleccioná un producto")
+combo_productos.grid(row=0, column=1, padx=5, pady=5)
+
+tk.Label(frame_agregar, text="Cantidad:", bg="#f5f5f5").grid(row=0, column=2, padx=5, pady=5)
+entrada_cantidad = tk.Entry(frame_agregar, width=10)
+entrada_cantidad.grid(row=0, column=3, padx=5, pady=5)
+
+boton_agregar = tk.Button(frame_agregar, text="Agregar al carrito", bg="#4CAF50", fg="white", command=agregar_producto)
+boton_agregar.grid(row=0, column=4, padx=10)
+
+
+frame_carrito = tk.LabelFrame(ventana, text="Carrito de compras", padx=10, pady=10, bg="#f5f5f5")
+frame_carrito.pack(fill="both", expand=True, padx=20, pady=10)
+
+tabla_carrito = ttk.Treeview(frame_carrito, columns=("nombre", "precio", "cantidad", "subtotal"), show="headings", height=8)
+tabla_carrito.heading("nombre", text="Nombre")
+tabla_carrito.heading("precio", text="Precio")
+tabla_carrito.heading("cantidad", text="Cantidad")
+tabla_carrito.heading("subtotal", text="Subtotal")
+tabla_carrito.pack(fill="both", expand=True)
+
+
+frame_botones = tk.Frame(ventana, bg="#f5f5f5")
+frame_botones.pack(fill="x", padx=20, pady=10)
+
+boton_eliminar = tk.Button(frame_botones, text="Eliminar producto", bg="#f44336", fg="white", command=eliminar_producto)
+boton_eliminar.pack(side="left", padx=10)
+
+boton_vaciar = tk.Button(frame_botones, text="Vaciar carrito", bg="#ff9800", fg="white", command=vaciar_carrito)
+boton_vaciar.pack(side="left", padx=10)
+
+label_total = tk.Label(frame_botones, text="Total: $0.00", font=("Arial", 12, "bold"), bg="#f5f5f5")
+label_total.pack(side="right", padx=20)
+
+
+actualizar_tabla_deposito()
+actualizar_tabla_carrito()
+
+ventana.mainloop()
